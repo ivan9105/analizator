@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
  * Hello world!
  */
 public class App {
+    public static final String A = "A";
     private Map<String, String> expressionMap = new HashMap<String, String>();
     private String expression;
     private int count = 0;
@@ -17,7 +18,10 @@ public class App {
         this.expression = expression.replaceAll(" ", "").toLowerCase();
     }
 
+    //Todo same method with input expression and arg name A0 = A1 + A2
     public void evaluate() {
+        //squrt first priority with same logic
+
         //( second priority
         int openBracket = expression.indexOf("(");
         if (openBracket >= 0) {
@@ -45,15 +49,12 @@ public class App {
             }
 
             openBracket = openBracketsPos.get(shift);
-            closeBracket = closedBracketsPos.get(shift);
 
             if (closeBracket >= 0) {
-                String expression_ = expression.substring(openBracket, shift == 0 ? closeBracket + 1 : closeBracket);
+                String expression_ = expression.substring(openBracket, closeBracket + 1);
                 expression = expression.replace(expression_, arg);
                 System.out.println(expression);
                 expressionMap.put(arg, expression_);
-
-                //Todo same method with input expression and arg name A0 = A1 + A2
                 count++;
 
                 if (!isCompleteExpression(expression)) {
@@ -67,17 +68,61 @@ public class App {
 
         int multiple = expression.indexOf("*");
         if (multiple >= 0) {
+            String arg = A + count;
+            String leftPart = expression.substring(0, multiple);
+            String rightPart = expression.substring(multiple + 1, expression.length());
+            String leftArg = getLeftArg(leftPart);
+            String rightArg = getRightArg(rightPart);
+            String expression_ = leftArg + "*" + rightArg;
 
+            expression = expression.replace(expression_, arg);
+            System.out.println(expression);
+            expressionMap.put(arg, expression_);
+            count++;
+
+            if (!isCompleteExpression(expression)) {
+                evaluate();
+            }
         }
+    }
+
+    private String getRightArg(String rightPart) {
+        String rightArg = "";
+        for (int i = 0; i < rightPart.length(); i++) {
+            if (isDigits(rightPart.toCharArray()[i])) {
+                rightArg = rightArg + rightPart.toCharArray()[i];
+            } else {
+                break;
+            }
+        }
+        return rightArg;
+    }
+
+    private String getLeftArg(String leftPart) {
+        String leftArg = "";
+        for (int i = leftPart.length() - 1; i >= 0; i--) {
+            if (isDigits(leftPart.toCharArray()[i])) {
+                leftArg = leftArg + leftPart.toCharArray()[i];
+            } else {
+                break;
+            }
+        }
+        return leftArg;
     }
 
     private boolean isCompleteExpression(String expression) {
         return !expression.matches(".*[+-/()*]+.*");
     }
 
+    private boolean isDigits(char symbol) {
+        return String.valueOf(symbol).matches("[1234567890" + A + "]");
+    }
+
     public static void main(String[] args) {
-        String expression = "(5 + 4 + (5 * 2 + (4 + 1))) + (5 + 2) + 5 * 2";
+        String expression = "(5 + 4 + (5 * 2 + (4 + 1))) + (5 + 2) + 5 * 2 + 4";
         App app = new App(expression);
         app.evaluate();
+
+        //Todo use unit tests for evaulater
     }
 }
