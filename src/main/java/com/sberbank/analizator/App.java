@@ -9,7 +9,6 @@ public class App {
     public static final String A = "A";
     private Map<String, String> expressionMap = new HashMap<String, String>();
     private String expression;
-    private Double result;
     private int count = 0;
 
     public App(String expression, boolean modified) {
@@ -21,7 +20,6 @@ public class App {
 
     public void evaluate() {
         //squrt first priority with same logic
-        //( second priority
         int openBracket = expression.indexOf("(");
         if (openBracket >= 0) {
             String arg = A + count;
@@ -152,7 +150,9 @@ public class App {
                 Map<String, String> expressionMap = app.getExpressionMap();
 
                 List<String> list = new ArrayList<String>(expressionMap.keySet());
-                String key = list.get(0);
+                Collections.sort(list);
+
+                String key = list.get(list.size() - 1);
                 String expression_ = expressionMap.get(key);
                 expressionMap.remove(key);
                 nextArgs.putAll(expressionMap);
@@ -160,35 +160,47 @@ public class App {
 
                 count = app.getCount();
             }
+        }
 
+        expressionMap.putAll(nextArgs);
 
-            /*if (isSimpleOperation(expression) && !isExistsArguments(expression)) {
-                if (expression.contains("*")) {
-                    String arg[] = expression.split("\\*");
+        calculate();
+        execute_();
+
+        String result = (String) expressionMap.values().toArray()[0];
+        return Double.valueOf(result);
+    }
+
+    private void calculate() {
+        for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
+            String expression_ = entry.getValue();
+            if (!isExistsArguments(expression_)) {
+                if (expression_.contains("*")) {
+                    String arg[] = expression_.split("\\*");
                     Double a1 = Double.valueOf(arg[0]);
                     Double a2 = Double.valueOf(arg[1]);
 
                     Double value = a1 * a2;
 
                     entry.setValue(String.valueOf(value));
-                } else if (expression.contains("+")) {
-                    String arg[] = expression.split("\\+");
+                } else if (expression_.contains("+")) {
+                    String arg[] = expression_.split("\\+");
                     Double a1 = Double.valueOf(arg[0]);
                     Double a2 = Double.valueOf(arg[1]);
 
                     Double value = a1 + a2;
 
                     entry.setValue(String.valueOf(value));
-                } else if (expression.contains("-")) {
-                    String arg[] = expression.split("\\-");
+                } else if (expression_.contains("-")) {
+                    String arg[] = expression_.split("\\-");
                     Double a1 = Double.valueOf(arg[0]);
                     Double a2 = Double.valueOf(arg[1]);
 
                     Double value = a1 - a2;
 
                     entry.setValue(String.valueOf(value));
-                } else if (expression.contains("/")) {
-                    String arg[] = expression.split("/");
+                } else if (expression_.contains("/")) {
+                    String arg[] = expression_.split("/");
                     Double a1 = Double.valueOf(arg[0]);
                     Double a2 = Double.valueOf(arg[1]);
 
@@ -196,16 +208,34 @@ public class App {
 
                     entry.setValue(String.valueOf(value));
                 }
-            }*/
+            }
         }
+    }
 
-        expressionMap.putAll(nextArgs);
+    private void execute_() {
+        Map<String, String> processMap = new HashMap<String, String>(expressionMap);
 
         for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
-            System.out.println(entry.getKey() + " " + entry.getValue());
+            String key = entry.getKey();
+
+            if (!isExistsArguments(entry.getValue())) {
+                for (Map.Entry<String, String> entry_ : processMap.entrySet()) {
+                    if (!entry_.getKey().equals(key) && entry_.getValue().contains(key)) {
+                        entry_.setValue(entry_.getValue().replace(key, entry.getValue()));
+                    }
+                }
+                processMap.remove(key);
+            }
         }
 
-        return 0d;
+        expressionMap.clear();
+        expressionMap.putAll(processMap);
+
+        calculate();
+
+        if (expressionMap.size() > 1) {
+            execute_();
+        }
     }
 
     private String getRightArg(String rightPart) {
@@ -248,21 +278,6 @@ public class App {
         return expression.matches(".*[" + A + "]+.*");
     }
 
-    private boolean isSimpleOperation(String expression) {
-        String dummy = replaceAllOperation(expression);
-        int count = 0;
-        for (int i = 0; i < dummy.toCharArray().length; i++) {
-            if (dummy.toCharArray()[i] == 'D') {
-                count++;
-                if (count > 1) {
-                    return false;
-                }
-            }
-        }
-
-        return count == 1;
-    }
-
     private boolean isComplexOperation(String expression) {
         String dummy = replaceAllOperation(expression);
         int count = 0;
@@ -299,18 +314,10 @@ public class App {
         return count;
     }
 
-    public String getExpression() {
-        return expression;
-    }
-
-    public void setExpression(String expression) {
-        this.expression = expression;
-    }
-
     public static void main(String[] args) {
-//        String expression = "(5 + 4 + (5 * 2 + (4 + 1))) + (5 + 2) + 5 * 2 + 4 + (4 / 2 + 3) / 3";
-        App app = new App("(5 + 4 + (5 * 2 + (4 + 1)))", true);
+        String expression = "2 + 2 * 2 + (4 / 2 * 2)";
+        App app = new App(expression, true);
         app.evaluate();
-        app.execute();
+        System.out.println(app.execute());
     }
 }
