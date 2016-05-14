@@ -5,13 +5,14 @@ import java.util.*;
 /**
  * Hello world!
  */
-public class App {
+public class Evaluater {
     public static final String A = "A";
+    public static final String M = "M";
     private Map<String, String> expressionMap = new HashMap<String, String>();
     private String expression;
     private int count = 0;
 
-    public App(String expression, boolean modified) {
+    public Evaluater(String expression, boolean modified) {
         this.expression = expression;
         if (modified) {
             this.expression = expression.replaceAll(" ", "").toLowerCase();
@@ -51,6 +52,12 @@ public class App {
                 String expression_ = expression.substring(openBracket, closeBracket + 1);
                 expression = expression.replace(expression_, arg);
                 expression_ = expression_.substring(1, expression_.length() - 1);
+
+                //for single negative numbers
+                if (expression_.contains("-") && expression_.split("-")[0].equals("")) {
+                    expression_ = expression_.replace("-", M);
+                }
+
                 expressionMap.put(arg, expression_);
                 count++;
 
@@ -143,11 +150,11 @@ public class App {
             String expression = entry.getValue();
 
             if (isComplexOperation(expression)) {
-                App app = new App(expression, false);
-                app.setCount(count++);
-                app.evaluate();
+                Evaluater evaluater = new Evaluater(expression, false);
+                evaluater.setCount(count++);
+                evaluater.evaluate();
 
-                Map<String, String> expressionMap = app.getExpressionMap();
+                Map<String, String> expressionMap = evaluater.getExpressionMap();
 
                 List<String> list = new ArrayList<String>(expressionMap.keySet());
                 Collections.sort(list);
@@ -158,7 +165,7 @@ public class App {
                 nextArgs.putAll(expressionMap);
                 entry.setValue(expression_);
 
-                count = app.getCount();
+                count = evaluater.getCount();
             }
         }
 
@@ -167,7 +174,7 @@ public class App {
         calculate();
         execute_();
 
-        String result = (String) expressionMap.values().toArray()[0];
+        String result = ((String) expressionMap.values().toArray()[0]).replaceAll(M, "-");
         return Double.valueOf(result);
     }
 
@@ -177,39 +184,67 @@ public class App {
             if (!isExistsArguments(expression_)) {
                 if (expression_.contains("*")) {
                     String arg[] = expression_.split("\\*");
-                    Double a1 = Double.valueOf(arg[0]);
-                    Double a2 = Double.valueOf(arg[1]);
+                    if (argsNotEmpty(arg)) {
+                        Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
+                        Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
-                    Double value = a1 * a2;
+                        Double value = a1 * a2;
 
-                    entry.setValue(String.valueOf(value));
+                        String valueStr = String.valueOf(value);
+                        if (value < 0) {
+                            valueStr = valueStr.replace("-", M);
+                        }
+                        entry.setValue(valueStr);
+                    }
                 } else if (expression_.contains("+")) {
                     String arg[] = expression_.split("\\+");
-                    Double a1 = Double.valueOf(arg[0]);
-                    Double a2 = Double.valueOf(arg[1]);
+                    if (argsNotEmpty(arg)) {
+                        Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
+                        Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
-                    Double value = a1 + a2;
+                        Double value = a1 + a2;
 
-                    entry.setValue(String.valueOf(value));
+                        String valueStr = String.valueOf(value);
+                        if (value < 0) {
+                            valueStr = valueStr.replace("-", M);
+                        }
+                        entry.setValue(valueStr);
+                    }
                 } else if (expression_.contains("-")) {
                     String arg[] = expression_.split("\\-");
-                    Double a1 = Double.valueOf(arg[0]);
-                    Double a2 = Double.valueOf(arg[1]);
+                    if (argsNotEmpty(arg)) {
+                        Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
+                        Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
-                    Double value = a1 - a2;
+                        Double value = a1 - a2;
 
-                    entry.setValue(String.valueOf(value));
+                        String valueStr = String.valueOf(value);
+                        if (value < 0) {
+                            valueStr = valueStr.replace("-", M);
+                        }
+                        entry.setValue(valueStr);
+                    }
                 } else if (expression_.contains("/")) {
                     String arg[] = expression_.split("/");
-                    Double a1 = Double.valueOf(arg[0]);
-                    Double a2 = Double.valueOf(arg[1]);
+                    if (argsNotEmpty(arg)) {
+                        Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
+                        Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
-                    Double value = a1 / a2;
+                        Double value = a1 / a2;
 
-                    entry.setValue(String.valueOf(value));
+                        String valueStr = String.valueOf(value);
+                        if (value < 0) {
+                            valueStr = valueStr.replace("-", M);
+                        }
+                        entry.setValue(valueStr);
+                    }
                 }
             }
         }
+    }
+
+    private boolean argsNotEmpty(String[] arg) {
+        return !arg[0].equals("") && !arg[1].equals("");
     }
 
     private void execute_() {
@@ -315,9 +350,9 @@ public class App {
     }
 
     public static void main(String[] args) {
-        String expression = "2 + 2 * 2 + (4 / 2 * 2)";
-        App app = new App(expression, true);
-        app.evaluate();
-        System.out.println(app.execute());
+        String expression = "(5 + sqrt(4 + 6 + sqrt(sqrt(64))))";
+        Evaluater evaluater = new Evaluater(expression, true);
+        evaluater.evaluate();
+        System.out.println(evaluater.execute());
     }
 }
