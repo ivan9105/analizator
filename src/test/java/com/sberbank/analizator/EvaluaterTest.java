@@ -4,6 +4,8 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import java.util.Collections;
+
 /**
  * Unit test for simple Evaluater.
  */
@@ -57,6 +59,12 @@ public class EvaluaterTest
         evaluater = new Evaluater(expression, true);
         evaluater.evaluate();
         assertEquals(String.valueOf(evaluater.execute()), "-1.0");
+
+        expression = "sqrt(2+2)";
+        evaluater = new Evaluater(expression, true);
+        evaluater.setFunctions(Collections.singletonList(new Evaluater.Function("sqrt")));
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "2.0");
 
         assertTrue( true );
     }

@@ -6,11 +6,12 @@ import java.util.*;
  * Hello world!
  */
 public class Evaluater {
-    public static final String A = "A";
-    public static final String M = "M";
+    public static final String A = "a";
+    public static final String M = "m";
     private Map<String, String> expressionMap = new HashMap<String, String>();
     private String expression;
     private int count = 0;
+    private List<Function> functions = new ArrayList<Function>();
 
     public Evaluater(String expression, boolean modified) {
         this.expression = expression;
@@ -20,19 +21,15 @@ public class Evaluater {
     }
 
     public void evaluate() {
-        //squrt first priority with same logic
         int openBracket = expression.indexOf("(");
         if (openBracket >= 0) {
             String arg = A + count;
 
             List<Integer> openBracketsPos = new ArrayList<Integer>();
-            List<Integer> closedBracketsPos = new ArrayList<Integer>();
             char[] chars = expression.toCharArray();
             for (int i = 0; i < chars.length; i++) {
                 if (chars[i] == '(') {
                     openBracketsPos.add(i);
-                } else if (chars[i] == ')') {
-                    closedBracketsPos.add(i);
                 }
             }
             int closeBracket = expression.indexOf(")");
@@ -49,6 +46,18 @@ public class Evaluater {
             openBracket = openBracketsPos.get(shift);
 
             if (closeBracket >= 0) {
+                //check functions
+                for (Function function : getFunctions()) {
+                    String name = function.getName();
+                    if (closeBracket - name.length() > 0) {
+                        String preBracket = expression.substring(openBracket - name.length(), openBracket);
+                        if (function.getName().equals(preBracket)) {
+                            arg = arg + "!" + function.getName().toUpperCase();
+                            break;
+                        }
+                    }
+                }
+
                 String expression_ = expression.substring(openBracket, closeBracket + 1);
                 expression = expression.replace(expression_, arg);
                 expression_ = expression_.substring(1, expression_.length() - 1);
@@ -178,33 +187,72 @@ public class Evaluater {
         return Double.valueOf(result);
     }
 
+    private String evaluateExpression(Map<String, String> nextArgs) {
+        Evaluater evaluater = new Evaluater(expression, false);
+        evaluater.setCount(count++);
+        evaluater.setFunctions(getFunctions());
+        evaluater.evaluate();
+
+        Map<String, String> expressionMap = evaluater.getExpressionMap();
+
+        List<String> list = new ArrayList<String>(expressionMap.keySet());
+        Collections.sort(list);
+
+        String key = list.get(list.size() - 1);
+        String expression_ = expressionMap.get(key);
+        expressionMap.remove(key);
+        nextArgs.putAll(expressionMap);
+        count = evaluater.getCount();
+        return expression_;
+    }
+
     private void calculate() {
         for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
             String expression_ = entry.getValue();
+            String key = entry.getKey();
+            Function function = null;
+            if (key.contains("!")) {
+                for (Function function_ : getFunctions()) {
+                    if (key.contains(function_.getName().toUpperCase())) {
+                        function = function_;
+                        break;
+                    }
+                }
+            }
+
             if (!isExistsArguments(expression_)) {
                 if (expression_.contains("*")) {
                     String arg[] = expression_.split("\\*");
-                    if (argsNotEmpty(arg)) {
+                    if (checkArgs(arg)) {
                         Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
                         Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
                         Double value = a1 * a2;
 
                         String valueStr = String.valueOf(value);
+                        if (function != null) {
+                            valueStr = function.getValue(valueStr);
+                        }
+
                         if (value < 0) {
                             valueStr = valueStr.replace("-", M);
                         }
+
                         entry.setValue(valueStr);
                     }
                 } else if (expression_.contains("+")) {
                     String arg[] = expression_.split("\\+");
-                    if (argsNotEmpty(arg)) {
+                    if (checkArgs(arg)) {
                         Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
                         Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
                         Double value = a1 + a2;
 
                         String valueStr = String.valueOf(value);
+                        if (function != null) {
+                            valueStr = function.getValue(valueStr);
+                        }
+
                         if (value < 0) {
                             valueStr = valueStr.replace("-", M);
                         }
@@ -212,13 +260,17 @@ public class Evaluater {
                     }
                 } else if (expression_.contains("-")) {
                     String arg[] = expression_.split("\\-");
-                    if (argsNotEmpty(arg)) {
+                    if (checkArgs(arg)) {
                         Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
                         Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
                         Double value = a1 - a2;
 
                         String valueStr = String.valueOf(value);
+                        if (function != null) {
+                            valueStr = function.getValue(valueStr);
+                        }
+
                         if (value < 0) {
                             valueStr = valueStr.replace("-", M);
                         }
@@ -226,13 +278,17 @@ public class Evaluater {
                     }
                 } else if (expression_.contains("/")) {
                     String arg[] = expression_.split("/");
-                    if (argsNotEmpty(arg)) {
+                    if (checkArgs(arg)) {
                         Double a1 = Double.valueOf(arg[0].replaceAll(M, "-"));
                         Double a2 = Double.valueOf(arg[1].replaceAll(M, "-"));
 
                         Double value = a1 / a2;
 
                         String valueStr = String.valueOf(value);
+                        if (function != null) {
+                            valueStr = function.getValue(valueStr);
+                        }
+
                         if (value < 0) {
                             valueStr = valueStr.replace("-", M);
                         }
@@ -243,28 +299,30 @@ public class Evaluater {
         }
     }
 
-    private boolean argsNotEmpty(String[] arg) {
+    private boolean checkArgs(String[] arg) {
         return !arg[0].equals("") && !arg[1].equals("");
     }
 
     private void execute_() {
         Map<String, String> processMap = new HashMap<String, String>(expressionMap);
 
-        for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
-            String key = entry.getKey();
+        if (processMap.size() > 1) {
+            for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
+                String key = entry.getKey();
 
-            if (!isExistsArguments(entry.getValue())) {
-                for (Map.Entry<String, String> entry_ : processMap.entrySet()) {
-                    if (!entry_.getKey().equals(key) && entry_.getValue().contains(key)) {
-                        entry_.setValue(entry_.getValue().replace(key, entry.getValue()));
+                if (!isExistsArguments(entry.getValue())) {
+                    for (Map.Entry<String, String> entry_ : processMap.entrySet()) {
+                        if (!entry_.getKey().equals(key) && entry_.getValue().contains(key)) {
+                            entry_.setValue(entry_.getValue().replace(key, entry.getValue()));
+                        }
                     }
+                    processMap.remove(key);
                 }
-                processMap.remove(key);
             }
-        }
 
-        expressionMap.clear();
-        expressionMap.putAll(processMap);
+            expressionMap.clear();
+            expressionMap.putAll(processMap);
+        }
 
         calculate();
 
@@ -349,9 +407,42 @@ public class Evaluater {
         return count;
     }
 
+    public List<Function> getFunctions() {
+        return functions;
+    }
+
+    public void setFunctions(List<Function> functions) {
+        this.functions = functions;
+    }
+
+    public static class Function {
+        private String name;
+
+        public Function(String name) {
+            this.name = name;
+        }
+
+        public String getValue(String value) {
+            if (name.equals("sqrt")) {
+                Double value_ = Double.valueOf(value);
+                value_ = Math.sqrt(value_);
+                value = String.valueOf(value_);
+            }
+
+            return value;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
     public static void main(String[] args) {
-        String expression = "(5 + sqrt(4 + 6 + sqrt(sqrt(64))))";
+        String expression = "sqrt(2+2)";
         Evaluater evaluater = new Evaluater(expression, true);
+        evaluater.getFunctions().add(new Function("sqrt"));
+
+
         evaluater.evaluate();
         System.out.println(evaluater.execute());
     }
