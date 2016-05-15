@@ -6,8 +6,8 @@ import java.util.*;
  * Hello world!
  */
 public class Evaluater {
-    public static final String A = "a";
-    public static final String M = "m";
+    public static final String A = "ARG";
+    public static final String M = "MNS";
     private Map<String, String> expressionMap = new HashMap<String, String>();
     private Map<String, Function> modifierMap = new HashMap<String, Function>();
     private String expression;
@@ -19,7 +19,7 @@ public class Evaluater {
         if (modified) {
             this.expression = expression.replaceAll(" ", "").toLowerCase();
         }
-        this.functions.add(new Evaluater.Function("sqrt"));
+        this.functions.add(new SqrtFunction());
     }
 
     public void evaluate() {
@@ -50,10 +50,10 @@ public class Evaluater {
             if (closeBracket >= 0) {
                 //check functions
                 for (Function function : getFunctions()) {
-                    String name = function.getName();
+                    String name = function.getName().toLowerCase();
                     if (openBracket - name.length() >= 0) {
                         String preBracket = expression.substring(openBracket - name.length(), openBracket);
-                        if (function.getName().equals(preBracket)) {
+                        if (name.equals(preBracket)) {
                             modifierMap.put(arg, function);
                             break;
                         }
@@ -73,7 +73,7 @@ public class Evaluater {
 
                 //for single negative numbers
                 if (expression_.contains("-") && expression_.split("-")[0].equals("")) {
-                    expression_ = expression_.replace("-", M);
+                    expression_ = M + expression_.substring(1, expression_.length());
                 }
 
                 expressionMap.put(arg, expression_);
@@ -83,7 +83,7 @@ public class Evaluater {
                     evaluate();
                 }
             } else {
-                throw new RuntimeException("WTF");
+                throw new EvaluaterException("Check out the brackets");
             }
             return;
         }
@@ -170,6 +170,7 @@ public class Evaluater {
             if (isComplexOperation(expression)) {
                 Evaluater evaluater = new Evaluater(expression, false);
                 evaluater.setCount(count++);
+                evaluater.setFunctions(getFunctions());
                 evaluater.evaluate();
                 getModifierMap().putAll(evaluater.getModifierMap());
 
@@ -193,7 +194,12 @@ public class Evaluater {
         calculate();
         execute_();
 
-        String result = ((String) expressionMap.values().toArray()[0]).replaceAll(M, "-");
+        Object[] objects = expressionMap.values().toArray();
+        if (objects.length == 0) {
+            throw new EvaluaterException("The expression is not valid");
+        }
+
+        String result = ((String) objects[0]).replaceAll(M, "-");
         return Double.valueOf(result);
     }
 
@@ -298,11 +304,12 @@ public class Evaluater {
         if (processMap.size() > 1) {
             for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
                 String key = entry.getKey();
+                String value = entry.getValue();
 
-                if (!isExistsArguments(entry.getValue())) {
+                if (!isExistsArguments(value)) {
                     for (Map.Entry<String, String> entry_ : processMap.entrySet()) {
                         if (!entry_.getKey().equals(key) && entry_.getValue().contains(key)) {
-                            entry_.setValue(entry_.getValue().replace(key, entry.getValue()));
+                            entry_.setValue(entry_.getValue().replace(key, value.replace("-", M)));
                         }
                     }
                     processMap.remove(key);
@@ -406,38 +413,5 @@ public class Evaluater {
 
     public Map<String, Function> getModifierMap() {
         return modifierMap;
-    }
-
-    public static class Function {
-        private String name;
-
-        public Function(String name) {
-            this.name = name;
-        }
-
-        public String getValue(String value) {
-            if (name.equals("sqrt")) {
-                Double value_ = Double.valueOf(value);
-                value_ = Math.sqrt(value_);
-                value = String.valueOf(value_);
-            }
-
-            return value;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public static void main(String[] args) {
-        //check execute_();
-        String expression = "sqrt(sqrt(4)+sqrt(4)) + sqrt(sqrt(sqrt(sqrt(sqrt(1)))))";
-        Evaluater evaluater = new Evaluater(expression, true);
-        evaluater.getFunctions().add(new Function("sqrt"));
-
-
-        evaluater.evaluate();
-        System.out.println(evaluater.execute());
     }
 }

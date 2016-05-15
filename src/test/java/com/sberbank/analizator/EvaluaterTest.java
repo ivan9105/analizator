@@ -70,6 +70,57 @@ public class EvaluaterTest
         evaluater.evaluate();
         assertEquals(String.valueOf(evaluater.execute()), "3.0");
 
-        assertTrue( true );
+        expression = "((2+2) + (2+2) + (2+2))";
+        evaluater = new Evaluater(expression, true);
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "12.0");
+
+        expression = "((-2-2) + (-2-2) + (-2-2))";
+        evaluater = new Evaluater(expression, true);
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "-12.0");
+
+        expression = "-2-(-2)";
+        evaluater = new Evaluater(expression, true);
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "0.0");
+
+        expression = "sqrt((-2-(-2)) + 1)";
+        evaluater = new Evaluater(expression, true);
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "1.0");
+
+        //My function example
+        expression = "multipleByTwo(multipleByTwo(2))";
+        evaluater = new Evaluater(expression, true);
+        evaluater.getFunctions().add(new Function() {
+            public String getName() {
+                return "multipleByTwo";
+            }
+
+            public String getValue(String value) {
+                Double value_ = Double.valueOf(value);
+                value_ = value_ * 2;
+                value = String.valueOf(value_);
+                return value;
+            }
+        });
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "8.0");
+
+        boolean isException = false;
+
+        try {
+            expression = "()()";
+            evaluater = new Evaluater(expression, true);
+            evaluater.evaluate();
+            assertEquals(String.valueOf(evaluater.execute()), "1.0");
+        } catch (EvaluaterException e) {
+            isException = true;
+        }
+
+        assertTrue(isException);
+
+        assertTrue(true);
     }
 }
