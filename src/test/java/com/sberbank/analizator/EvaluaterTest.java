@@ -121,6 +121,12 @@ public class EvaluaterTest
 
         assertTrue(isException);
 
-        assertTrue(true);
+        expression = "G55 + G33 + sqrt(G4)";
+        evaluater = new Evaluater(expression, true);
+        evaluater.getArgumentsMap().put("G55", "130");
+        evaluater.getArgumentsMap().put("G33", "270");
+        evaluater.getArgumentsMap().put("G4", "4");
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "402.0");
     }
 }

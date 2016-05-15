@@ -9,6 +9,7 @@ public class Evaluater {
     public static final String A = "ARG";
     public static final String M = "MNS";
     private Map<String, String> expressionMap = new HashMap<String, String>();
+    private Map<String, String> argumentsMap = new HashMap<String, String>();
     private Map<String, Function> modifierMap = new HashMap<String, Function>();
     private String expression;
     private int count = 0;
@@ -23,6 +24,15 @@ public class Evaluater {
     }
 
     public void evaluate() {
+        if (argumentsMap.size() > 0) {
+            for (Map.Entry<String, String> entry : argumentsMap.entrySet()) {
+                if (expression.contains(entry.getKey().toLowerCase())) {
+                    this.expression = expression.replace(entry.getKey().toLowerCase(), entry.getValue());
+                }
+            }
+        }
+        argumentsMap.clear();
+
         int openBracket = expression.indexOf("(");
         if (openBracket >= 0) {
             String arg = A + count;
@@ -393,6 +403,10 @@ public class Evaluater {
 
     public Map<String, String> getExpressionMap() {
         return expressionMap;
+    }
+
+    public Map<String, String> getArgumentsMap() {
+        return argumentsMap;
     }
 
     public void setCount(int count) {
