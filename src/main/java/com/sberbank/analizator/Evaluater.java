@@ -13,10 +13,13 @@ public class Evaluater {
     private Map<String, Function> modifierMap = new HashMap<String, Function>();
     private String expression;
     private int count = 0;
+    private Map<String, String> replacementMap = new HashMap<String, String>();
     private List<Function> functions = new ArrayList<Function>();
+    private boolean modified;
 
     public Evaluater(String expression, boolean modified) {
         this.expression = expression;
+        this.modified = modified;
         if (modified) {
             this.expression = expression.replaceAll(" ", "").toLowerCase();
         }
@@ -24,6 +27,32 @@ public class Evaluater {
     }
 
     public void evaluate() {
+        if (modified) {
+            int count = 0;
+            String word = "Z";
+
+            for (Function function : getFunctions()) {
+                String name = function.getName().toLowerCase();
+                String replacement = word + count++;
+                this.expression = expression.replace(name, replacement);
+                replacementMap.put(replacement, name);
+            }
+
+            for (String argument : getArgumentsMap().keySet()) {
+                String replacement = word + count++;
+                this.expression = expression.replace(argument.toLowerCase(), replacement);
+                replacementMap.put(replacement, argument.toLowerCase());
+            }
+
+            this.expression = expression.replaceAll("[^0123456789Z+-/*()]", "");
+
+            for (Map.Entry<String, String> entry : replacementMap.entrySet()) {
+                this.expression = expression.replace(entry.getKey(), entry.getValue());
+            }
+
+            modified = false;
+        }
+
         if (argumentsMap.size() > 0) {
             for (Map.Entry<String, String> entry : argumentsMap.entrySet()) {
                 if (expression.contains(entry.getKey().toLowerCase())) {

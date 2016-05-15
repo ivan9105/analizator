@@ -128,5 +128,13 @@ public class EvaluaterTest
         evaluater.getArgumentsMap().put("G4", "4");
         evaluater.evaluate();
         assertEquals(String.valueOf(evaluater.execute()), "402.0");
+
+        expression = "G55dhdhdf=: + G33dsgdfg + jjjsqrtzvzv(G4)=";
+        evaluater = new Evaluater(expression, true);
+        evaluater.getArgumentsMap().put("G55", "130");
+        evaluater.getArgumentsMap().put("G33", "270");
+        evaluater.getArgumentsMap().put("G4", "4");
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "402.0");
     }
 }
