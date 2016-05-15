@@ -62,9 +62,13 @@ public class EvaluaterTest
 
         expression = "sqrt(2+2)";
         evaluater = new Evaluater(expression, true);
-        evaluater.setFunctions(Collections.singletonList(new Evaluater.Function("sqrt")));
         evaluater.evaluate();
         assertEquals(String.valueOf(evaluater.execute()), "2.0");
+
+        expression = "sqrt(sqrt(4)+sqrt(4)) + sqrt(sqrt(sqrt(sqrt(sqrt(1)))))";
+        evaluater = new Evaluater(expression, true);
+        evaluater.evaluate();
+        assertEquals(String.valueOf(evaluater.execute()), "3.0");
 
         assertTrue( true );
     }

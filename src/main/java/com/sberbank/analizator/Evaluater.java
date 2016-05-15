@@ -9,6 +9,7 @@ public class Evaluater {
     public static final String A = "a";
     public static final String M = "m";
     private Map<String, String> expressionMap = new HashMap<String, String>();
+    private Map<String, Function> modifierMap = new HashMap<String, Function>();
     private String expression;
     private int count = 0;
     private List<Function> functions = new ArrayList<Function>();
@@ -18,6 +19,7 @@ public class Evaluater {
         if (modified) {
             this.expression = expression.replaceAll(" ", "").toLowerCase();
         }
+        this.functions.add(new Evaluater.Function("sqrt"));
     }
 
     public void evaluate() {
@@ -49,17 +51,24 @@ public class Evaluater {
                 //check functions
                 for (Function function : getFunctions()) {
                     String name = function.getName();
-                    if (closeBracket - name.length() > 0) {
+                    if (openBracket - name.length() >= 0) {
                         String preBracket = expression.substring(openBracket - name.length(), openBracket);
                         if (function.getName().equals(preBracket)) {
-                            arg = arg + "!" + function.getName().toUpperCase();
+                            modifierMap.put(arg, function);
                             break;
                         }
                     }
                 }
 
                 String expression_ = expression.substring(openBracket, closeBracket + 1);
-                expression = expression.replace(expression_, arg);
+
+                if (modifierMap.get(arg) != null) {
+                    expression = expression.substring(0, openBracket -
+                            modifierMap.get(arg).getName().length()) + arg + expression.substring(closeBracket + 1, expression.length());
+                } else {
+                    expression = expression.substring(0, openBracket) + arg + expression.substring(closeBracket + 1, expression.length());
+                }
+
                 expression_ = expression_.substring(1, expression_.length() - 1);
 
                 //for single negative numbers
@@ -162,6 +171,7 @@ public class Evaluater {
                 Evaluater evaluater = new Evaluater(expression, false);
                 evaluater.setCount(count++);
                 evaluater.evaluate();
+                getModifierMap().putAll(evaluater.getModifierMap());
 
                 Map<String, String> expressionMap = evaluater.getExpressionMap();
 
@@ -187,38 +197,11 @@ public class Evaluater {
         return Double.valueOf(result);
     }
 
-    private String evaluateExpression(Map<String, String> nextArgs) {
-        Evaluater evaluater = new Evaluater(expression, false);
-        evaluater.setCount(count++);
-        evaluater.setFunctions(getFunctions());
-        evaluater.evaluate();
-
-        Map<String, String> expressionMap = evaluater.getExpressionMap();
-
-        List<String> list = new ArrayList<String>(expressionMap.keySet());
-        Collections.sort(list);
-
-        String key = list.get(list.size() - 1);
-        String expression_ = expressionMap.get(key);
-        expressionMap.remove(key);
-        nextArgs.putAll(expressionMap);
-        count = evaluater.getCount();
-        return expression_;
-    }
-
     private void calculate() {
         for (Map.Entry<String, String> entry : expressionMap.entrySet()) {
             String expression_ = entry.getValue();
             String key = entry.getKey();
-            Function function = null;
-            if (key.contains("!")) {
-                for (Function function_ : getFunctions()) {
-                    if (key.contains(function_.getName().toUpperCase())) {
-                        function = function_;
-                        break;
-                    }
-                }
-            }
+            Function function = modifierMap.get(key);
 
             if (!isExistsArguments(expression_)) {
                 if (expression_.contains("*")) {
@@ -232,6 +215,7 @@ public class Evaluater {
                         String valueStr = String.valueOf(value);
                         if (function != null) {
                             valueStr = function.getValue(valueStr);
+                            modifierMap.remove(key);
                         }
 
                         if (value < 0) {
@@ -251,6 +235,7 @@ public class Evaluater {
                         String valueStr = String.valueOf(value);
                         if (function != null) {
                             valueStr = function.getValue(valueStr);
+                            modifierMap.remove(key);
                         }
 
                         if (value < 0) {
@@ -269,6 +254,7 @@ public class Evaluater {
                         String valueStr = String.valueOf(value);
                         if (function != null) {
                             valueStr = function.getValue(valueStr);
+                            modifierMap.remove(key);
                         }
 
                         if (value < 0) {
@@ -287,6 +273,7 @@ public class Evaluater {
                         String valueStr = String.valueOf(value);
                         if (function != null) {
                             valueStr = function.getValue(valueStr);
+                            modifierMap.remove(key);
                         }
 
                         if (value < 0) {
@@ -294,6 +281,8 @@ public class Evaluater {
                         }
                         entry.setValue(valueStr);
                     }
+                } else if (function != null) {
+                    entry.setValue(function.getValue(expression_));
                 }
             }
         }
@@ -415,6 +404,10 @@ public class Evaluater {
         this.functions = functions;
     }
 
+    public Map<String, Function> getModifierMap() {
+        return modifierMap;
+    }
+
     public static class Function {
         private String name;
 
@@ -438,7 +431,8 @@ public class Evaluater {
     }
 
     public static void main(String[] args) {
-        String expression = "sqrt(2+2)";
+        //check execute_();
+        String expression = "sqrt(sqrt(4)+sqrt(4)) + sqrt(sqrt(sqrt(sqrt(sqrt(1)))))";
         Evaluater evaluater = new Evaluater(expression, true);
         evaluater.getFunctions().add(new Function("sqrt"));
 
