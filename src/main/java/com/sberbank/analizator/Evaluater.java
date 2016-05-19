@@ -6,6 +6,7 @@ import java.util.*;
  * Hello world!
  */
 public class Evaluater {
+    //Todo remade algoritm, use only regexp
     public static final String A = "ARG";
     public static final String M = "MNS";
     private Map<String, String> expressionMap = new HashMap<String, String>();
