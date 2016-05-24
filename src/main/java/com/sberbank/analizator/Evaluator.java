@@ -21,6 +21,7 @@ public class Evaluator {
         OPERATORS.put("-", new int[]{0, LEFT_ASSOC});
         OPERATORS.put("*", new int[]{5, LEFT_ASSOC});
         OPERATORS.put("/", new int[]{5, LEFT_ASSOC});
+        OPERATORS.put("^", new int[]{10, RIGHT_ASSOC});
     }
 
     private static boolean isOperator(String token) {
@@ -102,7 +103,8 @@ public class Evaluator {
                 Double result = token.compareTo("+") == 0 ? d1 + d2 :
                         token.compareTo("-") == 0 ? d1 - d2 :
                                 token.compareTo("*") == 0 ? d1 * d2 :
-                                        d1 / d2;
+                                        token.compareTo("^") == 0 ? Math.pow(d2, d1) :
+                                                d1 / d2;
                 stack.push(String.valueOf(result));
             }
         }
@@ -110,7 +112,7 @@ public class Evaluator {
     }
 
     public static void main(String[] args) {
-        String[] input = "( 1 + 2 ) * ( 3 / 4 ) - ( 5 + 6 )".split(" ");
+        String[] input = "( 1 + 2 ) * ( 3 / 4 ) - ( 5 + 6 ) + 2 ^ ( 2 + 2 ^ 2 )".split(" ");
         String[] output = infixToRPN(input);
         for (String token : output) {
             System.out.print(token + " ");
