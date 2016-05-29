@@ -16,7 +16,7 @@ public class RegexpReceiptTest extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(EvaluaterTest.class);
+        return new TestSuite(EvaluatorTest.class);
     }
 
     public void testApp() {

@@ -4,19 +4,17 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.util.Collections;
-
 /**
  * Unit test for simple Evaluater.
  */
-public class EvaluaterTest
+public class EvaluatorTest
         extends TestCase {
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public EvaluaterTest(String testName) {
+    public EvaluatorTest(String testName) {
         super(testName);
     }
 
@@ -24,7 +22,7 @@ public class EvaluaterTest
      * @return the suite of tests being tested
      */
     public static Test suite() {
-        return new TestSuite(EvaluaterTest.class);
+        return new TestSuite(EvaluatorTest.class);
     }
 
     /**
