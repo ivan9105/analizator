@@ -7,7 +7,7 @@ import junit.framework.TestSuite;
 import java.util.regex.Pattern;
 
 /**
- * @author Иван
+ * @author Ivan
  * @version $Id$
  */
 public class RegexpReceiptTest extends TestCase {
